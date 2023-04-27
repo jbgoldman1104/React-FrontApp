@@ -10,7 +10,7 @@ import auth from '@react-native-firebase/auth';
 import { GoogleSignin, GoogleSigninButton } from '@react-native-google-signin/google-signin';
 import { err } from 'react-native-svg/lib/typescript/xml';
 
-import nacl from "tweetnacl";
+import nacl  from "tweetnacl";
 import bs58 from "bs58";
 
 // import firebase from '../firebaseConfig';
@@ -23,6 +23,20 @@ GoogleSignin.configure({
     offlineAccess: true
 });
 
+function cleanup(arr: any) {
+    for (var i = 0; i < arr.length; i++) arr[i] = 0;
+}
+
+// nacl.setPRNG((x:Uint8Array, n:number)=>{
+//     var crypto = require('crypto');
+//     var QUOTA = 65536;
+//     var i, v = new Uint8Array(n);
+//     for (i = 0; i < n; i += QUOTA) {
+//         crypto.getRandomValues(v.subarray(i, i + Math.min(n - i, QUOTA)));
+//     }
+//     for (i = 0; i < n; i++) x[i] = v[i];
+//     cleanup(v);
+// });
 // async function onAppleButtonPress() {
 //     // Start the sign-in request
 //     const appleAuthRequestResponse = await appleAuth.performRequest({
@@ -140,6 +154,7 @@ const LogIn = ({ navigation }: MainStackScreenProps<'LogIn'>) => {
     // Set an initializing state whilst Firebase connects
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState();
+  const [dappKeyPair] = useState(nacl.box.keyPair());
 
   // Handle user state changes
   function onAuthStateChanged(user: any) {
@@ -163,15 +178,14 @@ const LogIn = ({ navigation }: MainStackScreenProps<'LogIn'>) => {
         console.log(err);
     });
     const listener = Linking.addEventListener("url", handleDeepLink);
-    return () => {
-      listener.remove();
-    };
+    // return () => {
+    //   listener.remove();
+    // };
     
     const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
     return subscriber; // unsubscribe on unmount
 }, []);
 
-    // const [dappKeyPair] = useState(nacl.box.keyPair());
 
     const onConnectWallet = () =>{
         const params = new URLSearchParams({

@@ -8,6 +8,7 @@ import Chat from '../screens/Chat';
 import HomeTabsNavigator from './TabNavigator';
 import OnBoarding from '../screens/OnBoarding';
 import LogIn from '../screens/LogIn';
+import Signup from '../screens/Signup';
 
 const MainStack = createNativeStackNavigator<MainStackParamList>();
 export default function MainNavigator() {
@@ -15,6 +16,7 @@ export default function MainNavigator() {
     <MainStack.Navigator initialRouteName="OnBoarding" screenOptions={{ headerShown: false }}>
       <MainStack.Screen name="OnBoarding" component={OnBoarding}/>
       <MainStack.Screen name="LogIn" component={LogIn}/>
+      <MainStack.Screen name="Signup" component={Signup}/>
       <MainStack.Screen name="HomeTabs" component={HomeTabsNavigator} />
       <MainStack.Screen name="Product" component={ProductInfo} />
       <MainStack.Screen name="Settings" component={Settings} />

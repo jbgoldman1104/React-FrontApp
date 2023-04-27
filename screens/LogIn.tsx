@@ -139,16 +139,24 @@ const LogIn = ({ navigation }: MainStackScreenProps<'LogIn'>) => {
 
   // Handle user state changes
   function onAuthStateChanged(user: any) {
+    if ( !user ) {
+        return;
+    }
     console.log(user);
-    //navigation.navigate('HomeTabs')
+    navigation.navigate('Signup')
     // setUser(user);
     // if (initializing) setInitializing(false);
   }
 
   useEffect(() => {
+    auth().signOut().then(()=>{
+
+    }).catch(err=>{
+        console.log(err);
+    });
     const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
     return subscriber; // unsubscribe on unmount
-  }, []);
+}, []);
 
   //if (initializing) return null;
 
@@ -211,8 +219,9 @@ const LogIn = ({ navigation }: MainStackScreenProps<'LogIn'>) => {
                 <TextInput
                     placeholder='Email'
                     style={{
-                        paddingHorizontal: 1,
-                        borderColor: COLOURS.black,
+                        paddingHorizontal: 16,
+                        borderColor: COLOURS.border,
+                        borderWidth: 1,
                         borderRadius: 30,
                         width: '100%',
                         height: 48
@@ -221,7 +230,31 @@ const LogIn = ({ navigation }: MainStackScreenProps<'LogIn'>) => {
 
                 </TextInput>
             </View>
+            
+            {/* Password Input */}
+            <View
+                style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    paddingTop: '3%',
 
+                }}
+            >
+                <TextInput
+                    placeholder='Password'
+                    style={{
+                        paddingHorizontal: 16,
+                        borderColor: COLOURS.border,
+                        borderWidth: 1,
+                        borderRadius: 30,
+                        width: '100%',
+                        height: 48
+                    }}
+                >
+
+                </TextInput>
+            </View>
             {/* Log in / Sign up */}
             <View
                 style={{
@@ -339,7 +372,11 @@ const LogIn = ({ navigation }: MainStackScreenProps<'LogIn'>) => {
                 <Ionicons
                     name="logo-google"
                     size={30}
-                    onPress={() => onGoogleButtonPress()}
+                    onPress={() => onGoogleButtonPress().then(()=>{
+
+                    }).catch((err)=>{
+                        console.log(err);
+                    })}
                 />
 
                 {/* <GoogleSigninButton

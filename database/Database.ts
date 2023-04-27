@@ -10,7 +10,9 @@ export const COLOURS = {
   charcoalGrey: '#676767',
   silver: '#B3B3B3',
   golden: '#FFD02C',
-  purple: '#933FE7'
+  purple: '#933FE7',
+  border: '#0000004D',
+  textColor: '#000000B2',
 };
 
 export const Categorys = [

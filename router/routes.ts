@@ -6,6 +6,7 @@ import { Item } from '../models/Item';
 export type MainStackParamList = {
   OnBoarding: undefined;
   LogIn: undefined;
+  Signup: undefined;
   Settings: undefined;
   HomeTabs: undefined;
   Product: { product: Item };

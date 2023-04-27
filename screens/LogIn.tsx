@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, Button, StatusBar, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, Image, Button, StatusBar, ScrollView, TouchableOpacity, TextInput, Linking } from 'react-native';
 import { COLOURS, _Items } from '../database/Database';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { MainStackScreenProps } from '../router/routes';
@@ -9,6 +9,10 @@ import auth from '@react-native-firebase/auth';
 // import { LoginManager, AccessToken } from 'react-native-fbsdk-next';
 import { GoogleSignin, GoogleSigninButton } from '@react-native-google-signin/google-signin';
 import { err } from 'react-native-svg/lib/typescript/xml';
+
+import nacl from "tweetnacl";
+import bs58 from "bs58";
+
 // import firebase from '../firebaseConfig';
 // import * as Crypto from "expo-crypto";
 // import * as AppleAuthentication from "expo-apple-authentication";
@@ -148,15 +152,41 @@ const LogIn = ({ navigation }: MainStackScreenProps<'LogIn'>) => {
     // if (initializing) setInitializing(false);
   }
 
+  const handleDeepLink = ({ url }: any) => {
+    console.log(`url = `, url);
+  };
+
   useEffect(() => {
     auth().signOut().then(()=>{
 
     }).catch(err=>{
         console.log(err);
     });
+    const listener = Linking.addEventListener("url", handleDeepLink);
+    return () => {
+      listener.remove();
+    };
+    
     const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
     return subscriber; // unsubscribe on unmount
 }, []);
+
+    // const [dappKeyPair] = useState(nacl.box.keyPair());
+
+    const onConnectWallet = () =>{
+        const params = new URLSearchParams({
+            // dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
+            cluster: "devnet",
+            app_url: "https://deeplink-movie-tutorial-dummy-site.vercel.app/",
+            redirect_link: "wizfront://connect",
+          });
+
+          const BASE_URL = "https://phantom.app/ul/v1/";
+      
+          const url = `${BASE_URL}connect/?${params.toString()}`;
+          console.log(url);
+          Linking.openURL(url);
+    }
 
   //if (initializing) return null;
 
@@ -403,7 +433,7 @@ const LogIn = ({ navigation }: MainStackScreenProps<'LogIn'>) => {
                 }}
             >
                 <TouchableOpacity
-                    // onPress={() => navigation.navigate('Home')}
+                    onPress={() => onConnectWallet()}
                     style={{
                         flexDirection: 'row',
                         alignItems: 'center',

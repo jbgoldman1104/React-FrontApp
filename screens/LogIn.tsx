@@ -1,3 +1,5 @@
+import "react-native-get-random-values";
+import "react-native-url-polyfill/auto";
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, Button, StatusBar, ScrollView, TouchableOpacity, TextInput, Linking } from 'react-native';
 import { COLOURS, _Items } from '../database/Database';
@@ -10,8 +12,13 @@ import auth from '@react-native-firebase/auth';
 import { GoogleSignin, GoogleSigninButton } from '@react-native-google-signin/google-signin';
 import { err } from 'react-native-svg/lib/typescript/xml';
 
-import nacl  from "tweetnacl";
+import { buildUrl, redirectUrl } from "../utils/buildUrl";
+import storage from "../utils/storage";
+import { encryptPayload } from "../utils/encryptPayload";
+
+import nacl from "tweetnacl";
 import bs58 from "bs58";
+import { decryptPayload } from "../utils/decryptPayload";
 
 // import firebase from '../firebaseConfig';
 // import * as Crypto from "expo-crypto";
@@ -23,73 +30,17 @@ GoogleSignin.configure({
     offlineAccess: true
 });
 
-function cleanup(arr: any) {
-    for (var i = 0; i < arr.length; i++) arr[i] = 0;
-}
-
-// nacl.setPRNG((x:Uint8Array, n:number)=>{
-//     var crypto = require('crypto');
-//     var QUOTA = 65536;
-//     var i, v = new Uint8Array(n);
-//     for (i = 0; i < n; i += QUOTA) {
-//         crypto.getRandomValues(v.subarray(i, i + Math.min(n - i, QUOTA)));
-//     }
-//     for (i = 0; i < n; i++) x[i] = v[i];
-//     cleanup(v);
-// });
-// async function onAppleButtonPress() {
-//     // Start the sign-in request
-//     const appleAuthRequestResponse = await appleAuth.performRequest({
-//         requestedOperation: appleAuth.Operation.LOGIN,
-//         requestedScopes: [appleAuth.Scope.EMAIL, appleAuth.Scope.FULL_NAME],
-//     });
-
-//     // Ensure Apple returned a user identityToken
-//     if (!appleAuthRequestResponse.identityToken) {
-//         throw new Error('Apple Sign-In failed - no identify token returned');
-//     }
-
-//     // Create a Firebase credential from the response
-//     const { identityToken, nonce } = appleAuthRequestResponse;
-//     const appleCredential = auth.AppleAuthProvider.credential(identityToken, nonce);
-
-//     // Sign the user in with the credential
-//     return auth().signInWithCredential(appleCredential);
-// }
-
-// async function onFacebookButtonPress() {
-//     // Attempt login with permissions
-//     const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
-
-//     if (result.isCancelled) {
-//         throw 'User cancelled the login process';
-//     }
-
-//     // Once signed in, get the users AccesToken
-//     const data = await AccessToken.getCurrentAccessToken();
-
-//     if (!data) {
-//         throw 'Something went wrong obtaining access token';
-//     }
-
-//     // Create a Firebase credential with the AccessToken
-//     const facebookCredential = auth.FacebookAuthProvider.credential(data.accessToken);
-
-//     // Sign-in the user with the credential
-//     return auth().signInWithCredential(facebookCredential);
-// }
-
 async function onGoogleButtonPress() {
 
     await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-  // Get the users ID token
-  const { idToken } = await GoogleSignin.signIn();
+    // Get the users ID token
+    const { idToken } = await GoogleSignin.signIn();
 
-  // Create a Google credential with the token
-  const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+    // Create a Google credential with the token
+    const googleCredential = auth.GoogleAuthProvider.credential(idToken);
 
-  // Sign-in the user with the credential
-  return await auth().signInWithCredential(googleCredential);
+    // Sign-in the user with the credential
+    return await auth().signInWithCredential(googleCredential);
 
     // // Get the users ID token
     // const { idToken, accessToken } = await GoogleSignin.signIn();
@@ -105,9 +56,9 @@ async function signIn() {
     try {
         await GoogleSignin.hasPlayServices();
         const userInfo = await GoogleSignin.signIn();
-      } catch (error: any) {
+    } catch (error: any) {
         console.log('error in google signin', error);
-      }
+    }
 }
 
 // const loginWithApple = async () => {
@@ -152,60 +103,143 @@ async function signIn() {
 const LogIn = ({ navigation }: MainStackScreenProps<'LogIn'>) => {
 
     // Set an initializing state whilst Firebase connects
-  const [initializing, setInitializing] = useState(true);
-  const [user, setUser] = useState();
-  const [dappKeyPair] = useState(nacl.box.keyPair());
+    const [walletConnected, setWalletConnected] = useState<boolean>(false);
+    const [initializing, setInitializing] = useState(true);
+    const [user, setUser] = useState();
+    const [dappInfo, setDAppInfo] = useState();
 
-  // Handle user state changes
-  function onAuthStateChanged(user: any) {
-    if ( !user ) {
-        return;
-    }
-    console.log(user);
-    navigation.navigate('Signup')
-    // setUser(user);
-    // if (initializing) setInitializing(false);
-  }
-
-  const handleDeepLink = ({ url }: any) => {
-    console.log(`url = `, url);
-  };
-
-  useEffect(() => {
-    auth().signOut().then(()=>{
-
-    }).catch(err=>{
-        console.log(err);
-    });
-    const listener = Linking.addEventListener("url", handleDeepLink);
-    // return () => {
-    //   listener.remove();
-    // };
-    
-    const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
-    return subscriber; // unsubscribe on unmount
-}, []);
-
-
-    const onConnectWallet = () =>{
-        const params = new URLSearchParams({
-            // dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
-            cluster: "devnet",
-            app_url: "https://deeplink-movie-tutorial-dummy-site.vercel.app/",
-            redirect_link: "wizfront://connect",
-          });
-
-          const BASE_URL = "https://phantom.app/ul/v1/";
-      
-          const url = `${BASE_URL}connect/?${params.toString()}`;
-          console.log(url);
-          Linking.openURL(url);
+    // Handle user state changes
+    function onAuthStateChanged(user: any) {
+        if (!user) {
+            return;
+        }
+        console.log(user);
+        navigation.navigate('Signup')
+        // setUser(user);
+        // if (initializing) setInitializing(false);
     }
 
-  //if (initializing) return null;
+    const setDappInfo = async (dappInfo: any) => {
+        setDAppInfo(dappInfo);
+        await storage.setItem("dappInfo", dappInfo);
+    }
+
+    const handleDeepLink = async (deepLink: any) => {
+        try {
+            console.log(`url = `, deepLink.url);
+            if (!deepLink.url) {
+                return;
+            }
+            const url = new URL(deepLink.url);
+            const params = url.searchParams;
+
+            if (params.get("errorCode")) {
+                const error = Object.fromEntries([...params]);
+                const message =
+                    error?.errorMessage ??
+                    JSON.stringify(Object.fromEntries([...params]), null, 2);
+                console.log("error: ", message);
+
+                setDappInfo(null);
+                return;
+            }
+
+            // Handle a `connect` response from Phantom
+            if (/connect/.test(url.pathname)) {
+                const dappKeyPair = await storage.getItem("dappKeyPair");
+                const sharedSecret = nacl.box.before(
+                    bs58.decode(params.get("phantom_encryption_public_key")!),
+                    Uint8Array.from( Object.values(dappKeyPair.secretKey))
+                );
+                const connectData = decryptPayload(
+                    params.get("data")!,
+                    params.get("nonce")!,
+                    sharedSecret
+                );
+                console.log(`connected to ${connectData.public_key.toString()}`);
+                setDappInfo({
+                    ...connectData, sharedSecret
+                });
+                setWalletConnected(true);
+            }
+
+            // Handle a `disconnect` response from Phantom
+            if (/onDisconnect/.test(url.pathname)) {
+                setDappInfo(null);
+                setWalletConnected(false);
+                console.log("disconnected wallet");
+            }
+        } catch (err) {
+            console.log(err);
+        }
+    };
+
+    useEffect(() => {
+
+        storage.getItem("dappInfo").then(dappInfo => {
+            setDAppInfo(dappInfo);
+        }).catch(err => {
+            console.log(err);
+        });
+
+        auth().signOut().then(() => {
+
+        }).catch(err => {
+            console.log(err);
+        });
+        const listener = Linking.addEventListener("url", handleDeepLink);
+        // return () => {
+        //   listener.remove();
+        // };
+
+        const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
+        return subscriber; // unsubscribe on unmount
+    }, []);
+
+
+    const onConnectWallet = () => {
+        storage.getItem("dappKeyPair").then(dappKeyPair => {
+            const params = new URLSearchParams({
+                dapp_encryption_public_key: bs58.encode(Object.values(dappKeyPair.publicKey)),
+                cluster: "mainnet-beta",
+                app_url: "https://deeplink-movie-tutorial-dummy-site.vercel.app/",
+                redirect_link: redirectUrl("connect"),
+            });
+
+            const url = buildUrl("connect", params);
+
+            console.log(url);
+            Linking.openURL(url);
+        }).catch(err => {
+            console.log(err);
+        });
+    }
+
+    const onDisconnectWallet = () => {
+        if (!dappInfo) {
+            return;
+        }
+        const payload = {
+            session: dappInfo["session"],
+        };
+        const [nonce, encryptedPayload] = encryptPayload(payload, dappInfo["sharedSecret"]);
+        storage.getItem("dappKeyPair").then(dappKeyPair => {
+            const params = new URLSearchParams({
+                dapp_encryption_public_key: bs58.encode(Object.values(dappKeyPair.publicKey)),
+                nonce: bs58.encode(nonce),
+                redirect_link: redirectUrl("disconnect"),
+                payload: bs58.encode(encryptedPayload),
+            });
+            const url = buildUrl("disconnect", params);
+            console.log(url);
+            Linking.openURL(url);
+        });
+    }
+
+    //if (initializing) return null;
 
     return (
-        <View
+        <ScrollView showsVerticalScrollIndicator={false}
             style={{
                 width: '100%',
                 height: '100%',
@@ -256,7 +290,7 @@ const LogIn = ({ navigation }: MainStackScreenProps<'LogIn'>) => {
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    paddingTop: '50%',
+                    paddingTop: '30%',
 
                 }}
             >
@@ -274,7 +308,7 @@ const LogIn = ({ navigation }: MainStackScreenProps<'LogIn'>) => {
 
                 </TextInput>
             </View>
-            
+
             {/* Password Input */}
             <View
                 style={{
@@ -416,9 +450,9 @@ const LogIn = ({ navigation }: MainStackScreenProps<'LogIn'>) => {
                 <Ionicons
                     name="logo-google"
                     size={30}
-                    onPress={() => onGoogleButtonPress().then(()=>{
+                    onPress={() => onGoogleButtonPress().then(() => {
 
-                    }).catch((err)=>{
+                    }).catch((err) => {
                         console.log(err);
                     })}
                 />
@@ -440,14 +474,15 @@ const LogIn = ({ navigation }: MainStackScreenProps<'LogIn'>) => {
             {/* Connect wallet */}
             <View
                 style={{
-                    flexDirection: 'row',
+                    flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
                     paddingTop: '7%',
+                    paddingBottom: '4%',
                 }}
             >
                 <TouchableOpacity
-                    onPress={() => onConnectWallet()}
+                    onPress={dappInfo ? onDisconnectWallet : onConnectWallet}
                     style={{
                         flexDirection: 'row',
                         alignItems: 'center',
@@ -474,11 +509,27 @@ const LogIn = ({ navigation }: MainStackScreenProps<'LogIn'>) => {
                             textAlign: 'center'
                         }}
                     >
-                        Connect wallet
+                        {
+                            dappInfo ? `Disconnect wallet` : `Connect wallet`
+                        }
+
                     </Text>
                 </TouchableOpacity>
+
+                <Text
+                    style={{
+                        fontSize: 14,
+                        color: COLOURS.darkGrey,
+                        textAlign: 'center'
+                    }}
+                >
+                    {
+                        dappInfo ? `Wallet Connected: ${dappInfo["public_key"]}` : ``
+                    }
+
+                </Text>
             </View>
-        </View>
+        </ScrollView>
     );
 };
 

@@ -118,6 +118,12 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+          storeFile file('vinted.keystore')
+          storePassword 'password'
+          keyAlias 'alias'
+          keyPassword 'password'
+        }
     }
     buildTypes {
         debug {

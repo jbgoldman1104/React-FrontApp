@@ -367,7 +367,7 @@ const LogIn = ({ navigation }: MainStackScreenProps<'LogIn'>) => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    onPress={() => navigation.navigate('HomeTabs')}
+                    onPress={() => navigation.navigate('Signup')}
                     style={{
                         flexDirection: 'row',
                         alignItems: 'center',

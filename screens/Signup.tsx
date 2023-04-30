@@ -1,16 +1,40 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StatusBar, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, Image, Button, StatusBar, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { COLOURS, _Items } from '../database/Database';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { MainStackScreenProps } from '../router/routes';
+import  {CheckBox} from 'react-native-elements';
 // import { AppleButton, appleAuth } from '@invertase/react-native-apple-authentication';
 
 
 const Signup = ({ navigation }: MainStackScreenProps<'Signup'>) => {
+    const [photo, setPhoto] = React.useState(null);
 
+    const handleChoosePhoto = () => {
+        // launchImageLibrary({ noData: true }, (response) => {
+        //     // console.log(response);
+        //     if (response) {
+        //         setPhoto(response);
+        //     }
+        // });
+    };
+
+    const handleUploadPhoto = () => {
+        // fetch(`s ${SERVER_URL}/api/upload`, {
+        //     method: 'POST',
+        //     body: createFormData(photo, { userId: '123' }),
+        // })
+        //     .then((response) => response.json())
+        //     .then((response) => {
+        //         console.log('response', response);
+        //     })
+        //     .catch((error) => {
+        //         console.log('error', error);
+        //     });
+    };
 
     return (
-        <View
+        <ScrollView showsVerticalScrollIndicator={false}
             style={{
                 width: '100%',
                 height: '100%',
@@ -61,10 +85,20 @@ const Signup = ({ navigation }: MainStackScreenProps<'Signup'>) => {
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'center',
-
+                    paddingTop: '5%',
                 }}
             >
-                
+                {/* {photo && ( */}
+                <Image
+                    source={{ uri: 'https://raw.githubusercontent.com/AboutReact/sampleresource/master/old_logo.png' }}
+                    style={{
+                        width: 100,
+                        height: 100,
+                        borderRadius: 50,
+                    }}
+                />
+                {/* )} */}
+                {/* <Button title="Choose Photo" onPress={handleChoosePhoto} /> */}
             </View>
             {/* Username Input */}
             <View
@@ -72,7 +106,7 @@ const Signup = ({ navigation }: MainStackScreenProps<'Signup'>) => {
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    paddingTop: '50%',
+                    paddingTop: '5%',
 
                 }}
             >
@@ -91,32 +125,82 @@ const Signup = ({ navigation }: MainStackScreenProps<'Signup'>) => {
 
                 </TextInput>
             </View>
+            {/* Email Input */}
+            <View
+                style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    paddingTop: '5%',
 
+                }}
+            >
+                <TextInput
+                    placeholder='Email'
+                    style={{
+                        paddingHorizontal: 16,
+                        borderColor: COLOURS.border,
+                        borderWidth: 1,
+                        borderRadius: 30,
+                        width: '100%',
+                        height: 48
+                    }}
+                    underlineColorAndroid="transparent"
+                >
+
+                </TextInput>
+            </View>
+            {/* Password Input */}
+            <View
+                style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    paddingTop: '5%',
+
+                }}
+            >
+                <TextInput
+                    placeholder='Password'
+                    style={{
+                        paddingHorizontal: 16,
+                        borderColor: COLOURS.border,
+                        borderWidth: 1,
+                        borderRadius: 30,
+                        width: '100%',
+                        height: 48
+                    }}
+                    underlineColorAndroid="transparent"
+                >
+
+                </TextInput>
+            </View>
             {/* Text1 */}
             <View
                 style={{
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    paddingTop: '5%'
+                    paddingTop: '3%'
                 }}
             >
-                {/* <CheckBox
+                <CheckBox
+                    title={'I’d like to receive personalized offers and be the first to know about the latest updates to WTT via email.'}
                     style={{
-
+                        alignSelf: 'center'
                     }}
                 >
-                    
-                </CheckBox> */}
-                <Text
+
+                </CheckBox>
+                {/* <Text
                     style={{
                         fontSize: 14,
                         color: COLOURS.textColor,
                         fontWeight: '400',
                     }}
                 >
-                    I’d like to receive personalized offers and be the first to know about the latest updates to WTT via email.
-                </Text>
+                    
+                </Text> */}
             </View>
 
             {/* Text2 */}
@@ -125,27 +209,30 @@ const Signup = ({ navigation }: MainStackScreenProps<'Signup'>) => {
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    paddingTop: '5%'
+                    paddingTop: '3%'
                 }}
             >
-                {/* <CheckBox
+                <CheckBox
+                    title={'By registering, I confirm that I accept WTT’s Terms & Conditions and Pro terms of sale, have read the Privacy policy, and I’m at least 18 years old.'}
                     style={{
-
+                        alignSelf: 'center',
                     }}
+                    fontFamily=''
+                    titleProps={{}}
                 >
                     
-                </CheckBox> */}
-                <Text
+                </CheckBox>
+                {/* <Text
                     style={{
                         fontSize: 14,
                         color: COLOURS.textColor,
                         fontWeight: '400',
                     }}
                 >
-                    By registering, I confirm that I accept WTT’s Terms & Conditions and Pro terms of sale, have read the Privacy policy, and I’m at least 18 years old. 
-                </Text>
+                    
+                </Text> */}
             </View>
-        
+
             {/* Sign up */}
             <View
                 style={{
@@ -153,10 +240,11 @@ const Signup = ({ navigation }: MainStackScreenProps<'Signup'>) => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     paddingTop: '7%',
+                    paddingBottom: '7%',
                 }}
             >
                 <TouchableOpacity
-                    // onPress={() => navigation.navigate('Home')}
+                    onPress={() => navigation.navigate('HomeTabs')}
                     style={{
                         flexDirection: 'row',
                         alignItems: 'center',
@@ -187,7 +275,7 @@ const Signup = ({ navigation }: MainStackScreenProps<'Signup'>) => {
                     </Text>
                 </TouchableOpacity>
             </View>
-        </View>
+        </ScrollView>
     );
 };
 

@@ -1,3 +1,4 @@
+import "react-native-crypto";
 import "react-native-get-random-values";
 import "react-native-url-polyfill/auto";
 import { Buffer } from "buffer";
@@ -16,6 +17,9 @@ import nacl  from "tweetnacl";
 import bs58 from "bs58";
 import storage from "./utils/storage";
 import { decryptPayload } from "./utils/decryptPayload";
+
+//export const cryp = require('crypto');
+
 
 const theme = extendTheme({});
 
